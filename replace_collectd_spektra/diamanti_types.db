@@ -1,0 +1,9 @@
+# Diamanti Custom Types
+blocks_read            value:GAUGE:0:U
+blocks_written         value:GAUGE:0:U
+read_usec              value:GAUGE:0:U
+write_usec             value:GAUGE:0:U
+latency_usecs          value:GAUGE:0:U
+bytes_rx               value:GAUGE:0:U
+bytes_tx               value:GAUGE:0:U
+

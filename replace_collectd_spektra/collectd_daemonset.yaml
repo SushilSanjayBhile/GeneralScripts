@@ -1,0 +1,154 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: collectd
+  namespace: spektra-system
+  labels:
+    diamanti.com/app: collectd
+    version: collectd-v0.8
+spec:
+  selector:
+    matchLabels:
+      diamanti.com/app: collectd
+  template:
+    metadata:
+      labels:
+        diamanti.com/app: collectd
+        version: collectd-v0.8
+    spec:
+      containers:
+      - name: cadvisor
+        args:
+        - --profiling=false
+        - --port=4194
+        - --prometheus_endpoint=/metrics
+        - --application_metrics_count_limit=100
+        - --docker=unix:///var/run/docker.sock
+        - --housekeeping_interval=10s
+        - --storage_duration=2m0s
+        - --disable_metrics=percpu,process,sched,tcp,udp,disk,diskIO
+        - --docker_only
+        - --disable_root_cgroup_stats
+        - --store_container_labels=false
+        - --whitelisted_container_labels=io.kubernetes.container.name,io.kubernetes.pod.name,io.kubernetes.pod.namespace
+        - --skip_headers
+        image: diamanti/cadvisor:v1.34.0
+        ports:
+        - containerPort: 4194
+          name: http
+          protocol: TCP
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: diamanti-data
+          mountPath: /metrics
+        - mountPath: /rootfs
+          name: rootfs
+          readOnly: true
+        - mountPath: /var/run
+          name: var-run
+          readOnly: false
+        - mountPath: /sys
+          name: sys
+          readOnly: true
+        - mountPath: /var/lib/docker
+          name: docker
+          readOnly: true
+      - name: collectd-exporter
+        command:
+        - sh
+        - -c
+        - /bin/collectd_exporter --collectd.listen-address=:$(COLLECTD_EXPORTER_PORT)
+        env:
+        - name: COLLECTD_EXPORTER_PORT
+          value: "9111"
+        image: prom/collectd-exporter:v0.4.0
+      - name: node-exporter
+        command:
+        - sh
+        - -c
+        - /bin/node_exporter --collector.diskstats --collector.textfile.directory /metrics --web.listen-address=":9111"
+        image: prom/node-exporter:v0.17.0
+        securityContext:
+          privileged: true
+          runAsUser: 1000
+        volumeMounts:
+        - mountPath: /metrics
+          name: diamanti-data
+          readOnly: true
+      - name: collectd-es
+        env:
+        - name: CONFIG_FILE
+          value: /config/collectd.conf
+        - name: BOSUN_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: BOSUN_PORT
+          value: "12347"
+        - name: COLLECTD_EXPORTER_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: COLLECTD_EXPORTER_PORT
+          value: "25826"
+        - name: PROMETHEUS_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: PROMETHEUS_PORT
+          value: "9103"
+        - name: ETCD_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: ETCD_PORT
+          value: "2379"
+        - name: KUBELET_HOST
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: KUBELET_PORT
+          value: "4194"
+        image: diamanti/collectd:v0.9
+        securityContext:
+          privileged: false
+        volumeMounts:
+        - name: nodename
+          mountPath: /nodename
+          readOnly: true
+        - name: host-proc-diskstats
+          mountPath: /host/proc/diskstats
+          readOnly: true
+        - name: collectd-config
+          mountPath: /config
+          readOnly: true
+        - name: diamanti-data
+          mountPath: /metrics
+      hostNetwork: true
+      serviceAccount: spektra-monitoring-system
+      serviceAccountName: spektra-monitoring-system
+      volumes:
+      - name: rootfs
+        hostPath:
+          path: /
+      - name: var-run
+        hostPath:
+          path: /var/run
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: docker
+        hostPath:
+          path: /var/lib/docker
+      - name: nodename
+        hostPath:
+          path: /etc/hostname
+      - name: host-proc-diskstats
+        hostPath:
+          path: /proc/diskstats
+      - name: collectd-config
+        configMap:
+          name: collectd-config
+      - name: diamanti-data
+        emptyDir: {}
