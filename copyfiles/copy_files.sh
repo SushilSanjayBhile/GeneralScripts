@@ -1,6 +1,10 @@
 #!/bin/bash
 set -x
 
+rm ./*rpm
+
+wget http://bldserv1:8080/job/Project16-Master/1070/artifact/artifacts/rpm/diamanti-spektra-9.9.1-1070.x86_64.rpm
+
 # clean rpm directory
 ssh diamanti@vagserv1 -t  "rm ~/rpms/*"
 
