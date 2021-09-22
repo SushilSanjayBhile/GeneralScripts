@@ -1,0 +1,181 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: thanos-store
+  name: thanos-store
+  namespace: spektra-system
+  resourceVersion: "5561"
+  selfLink: /apis/apps/v1/namespaces/spektra-system/deployments/thanos-store
+  uid: 11a6eb8b-7619-4539-81c3-3b6ed836b51b
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: thanos-store
+      spektra.diamanti.io/version: test5
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/name: thanos-store
+        spektra.diamanti.io/version: test4
+    spec:
+      containers:
+      - args:
+        - store
+        - --data-dir=/var/thanos/store
+        - --grpc-address=0.0.0.0:10901
+        - --http-address=0.0.0.0:10902
+        - --objstore.config=$(OBJSTORE_CONFIG)
+        - --store.grpc.series-max-concurrency=20
+        - --index-cache-size=250MB
+        env:
+        - name: OBJSTORE_CONFIG
+          valueFrom:
+            secretKeyRef:
+              key: bucket.yml
+              name: thanos-storage-secret
+        image: quay.io/thanos/thanos:v0.16.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 8
+          httpGet:
+            path: /-/healthy
+            port: 10902
+            scheme: HTTP
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: thanos-store
+        ports:
+        - containerPort: 10901
+          name: grpc
+          protocol: TCP
+        - containerPort: 10902
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /-/ready
+            port: 10902
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 100m
+            memory: 500Mi
+          requests:
+            cpu: 10m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/thanos/store
+          name: thanos-store-data
+        - mountPath: /root/.mc/certs/CAs
+          name: spektra-client-cert
+          readOnly: true
+      - args:
+        - compact
+        - --log.level=debug
+        - --http-address=0.0.0.0:10912
+        - --data-dir=/var/thanos/store
+        - --objstore.config=$(OBJSTORE_CONFIG)
+        - --retention.resolution-raw=7d
+        - --retention.resolution-5m=30d
+        - --retention.resolution-1h=365d
+        - --delete-delay=0h
+        - --wait
+        - --wait-interval=5m
+        env:
+        - name: OBJSTORE_CONFIG
+          valueFrom:
+            secretKeyRef:
+              key: bucket.yml
+              name: thanos-storage-secret
+        image: quay.io/thanos/thanos:v0.16.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 8
+          httpGet:
+            path: /-/healthy
+            port: 10912
+            scheme: HTTP
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: thanos-compact
+        ports:
+        - containerPort: 10912
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 20
+          httpGet:
+            path: /-/ready
+            port: 10912
+            scheme: HTTP
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 100m
+            memory: 500Mi
+          requests:
+            cpu: 10m
+            memory: 100Mi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/thanos/store
+          name: thanos-store-data
+        - mountPath: /root/.mc/certs/CAs
+          name: spektra-client-cert
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      hostAliases:
+      - hostnames:
+        - spektra-domain.local
+        ip: 172.16.220.103
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - emptyDir: {}
+        name: thanos-store-data
+      - name: spektra-client-cert
+        secret:
+          defaultMode: 420
+          secretName: spektra-client-cert
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2021-09-08T04:38:05Z"
+    lastUpdateTime: "2021-09-08T04:38:05Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2021-09-08T04:37:59Z"
+    lastUpdateTime: "2021-09-08T04:38:05Z"
+    message: ReplicaSet "thanos-store-57574bbbb6" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
