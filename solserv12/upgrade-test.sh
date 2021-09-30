@@ -1,27 +1,25 @@
-present=$(rpm -qa | grep diaman | grep test)
-echo $present
-echo "REMOVING TEST RPM in 10 seconds, cleanup spektra"
-sleep 10
+oldrpm="3.3.0-84"
+rpm="3.2.0-118"
+rpmnew="3.3.0-84"
+rpmnew="0.0.1-test5"
 
+present=$(rpm -qa | grep diaman | grep ${oldrpm})
 if [ "$present" != "" ]; then
-	sudo rpm -e diamanti-spektra-0.0.1-test5.x86_64
+	echo "REMOVING ${oldrpm} RPM in 10 seconds, cleanup spektra"
+	echo "Installing spektra-${rpm}..."
+	sleep 10
+
+	sudo rpm -e diamanti-spektra-${oldrpm}.x86_64
 	sleep 3
 
-	# for 3.2.1 testing=> TESTED:OKAY
-	#sudo rpm -ivh ~/rpms/diamanti-spektra-3.2.1-159.x86_64.rpm
-
-	# for 3.2.0 testing
-	#sudo rpm -ivh ~/rpms/diamanti-spektra-3.2.0-118.x86_64.rpm
-
-	# for 3.1.1 testing
-	sudo rpm -ivh ~/rpms/diamanti-spektra-3.1.1-110.x86_64.rpm
+	sudo rpm -ivh ~/rpms/diamanti-spektra-${rpm}.x86_64.rpm
 	
 	echo "RPM INSTALLATION DONE"
 	sleep 5
 
 	init_spektra.sh
 	sleep 3
-	while [ 1 ]; do echo; kubectl get pods -A --no-headers | awk '{print $6}'  | grep -v m | grep -v d | grep -v h; if [ $? -ne 0 ]; then a=$((a+1)); break; echo; fi; sleep 3; done
+	/home/diamanti/sushil/GeneralScripts/solserv12/test.sh
 	echo "INIT SPEKTRA DONE"
 	sleep 10
 
@@ -37,22 +35,20 @@ if [ "$present" != "" ]; then
 	echo "adoption DONE"
 	sleep 10
 fi
-
 sleep 3
-
 image=$(sudo docker images | grep spektrasvc  | grep test5 | awk '{print $3}')
 sudo docker rmi $image
 
-#diamanti-spektra-3.2.0-118.x86_64
-present=$(rpm -qa | grep diaman | grep spektra | grep "3.1.1-110")
-echo $present
+present=$(rpm -qa | grep diaman | grep spektra | grep "${rpm}")
 if [ "$present" != "" ]; then
-	#sudo rpm -e diamanti-spektra-3.2.1-159.x86_64
-	#sudo rpm -e diamanti-spektra-3.2.0-118.x86_64
-	sudo rpm -e diamanti-spektra-3.1.1-110.x86_64
-	sleep 3
+	echo "REMOVING ${rpm} RPM in 10 seconds, cleanup spektra"
+	echo "Installing spektra-${rpmnew}..."
+	sleep 10
 
-	sudo rpm -ivh ~/rpms/diamanti-spektra-0.0.1-test5.x86_64.rpm
+	sudo rpm -e diamanti-spektra-${rpm}.x86_64
+	sleep 5
+
+	sudo rpm -ivh ~/rpms/diamanti-spektra-${rpmnew}.x86_64.rpm
 	echo "RPM INSTALLATION DONE"
 	sleep 5
 
