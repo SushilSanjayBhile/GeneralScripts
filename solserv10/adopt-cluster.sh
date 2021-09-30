@@ -1,5 +1,7 @@
+set -x
+
 dctl -s 172.16.220.230 login -u admin -p Diamanti@111 -n spektra-system
-export DMCTL_ENDPOINT=https://172.16.220.230:5443
+export DMCTL_SERVER=https://172.16.220.230:30011
 export DMCTL_INSECURE_SKIP_VERIFY=true
 
 # ---- Create tenant pepsi
