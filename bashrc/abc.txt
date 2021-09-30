@@ -1,0 +1,4 @@
+sushil
+sanjay
+bhile
+source /home/diamanti/sushil/GeneralScripts/bashrc/aliases.txt

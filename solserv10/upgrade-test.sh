@@ -19,22 +19,23 @@ if [ "$present" != "" ]; then
 
 	init_spektra.sh
 	sleep 3
-	/home/diamanti/sushil/GeneralScripts/solserv12/test.sh
+	../useful_to_all/test.sh
 	echo "INIT SPEKTRA DONE"
 	sleep 10
 
 	dev_init.sh
 	sleep 3
-	/home/diamanti/sushil/GeneralScripts/solserv12/test.sh
+	../useful_to_all/test.sh
 	echo "dev SPEKTRA DONE"
 	sleep 10
 
-	/home/diamanti/sushil/GeneralScripts/solserv12/adopt-cluster.sh
+	./adopt-cluster.sh
 	sleep 3
-	/home/diamanti/sushil/GeneralScripts/solserv12/test.sh
+	../useful_to_all/test.sh
 	echo "adoption DONE"
 	sleep 10
 fi
+exit
 sleep 3
 image=$(sudo docker images | grep spektrasvc  | grep test5 | awk '{print $3}')
 sudo docker rmi $image
@@ -55,5 +56,5 @@ if [ "$present" != "" ]; then
 	init_spektra.sh
 	sleep 5
 	for i in {1..10}; do ~/sushil/GeneralScripts/useful_to_all/pull_all_failed_docker_images.sh ; done
-	/home/diamanti/sushil/GeneralScripts/solserv12/test.sh
+	../useful_to_all/test.sh
 fi
