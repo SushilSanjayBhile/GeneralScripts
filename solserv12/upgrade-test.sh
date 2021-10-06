@@ -1,15 +1,17 @@
-oldrpm="3.3.0-84"   # first this gets removed
-rpm="3.2.0-118"     # then this gets installed  # then this gets removed
-rpmnew="3.3.0-84"   # then this gets installed
-rpmnew="0.0.1-test5"
+currentrpm=$(sudo rpm -qa | grep diamanti | grep spektra)   # first this gets removed
 
-present=$(rpm -qa | grep diaman | grep ${oldrpm})
+rpm="3.2.0-118"     # then this gets installed  # then this gets removed
+
+desiredrpm="3.3.0-84"   # then this gets installed
+desiredrpm="0.0.1-test5"
+
+present=$(rpm -qa | grep diaman | grep ${currentrpm})
 if [ "$present" != "" ]; then
-	echo "REMOVING ${oldrpm} RPM in 10 seconds, cleanup spektra"
+	echo "REMOVING ${currentrpm} RPM in 10 seconds, cleanup spektra"
 	echo "Installing spektra-${rpm}..."
 	sleep 10
 
-	sudo rpm -e diamanti-spektra-${oldrpm}.x86_64
+	sudo rpm -e ${currentrpm}
 	sleep 3
 
 	sudo rpm -ivh ~/rpms/diamanti-spektra-${rpm}.x86_64.rpm
@@ -42,13 +44,13 @@ sudo docker rmi $image
 present=$(rpm -qa | grep diaman | grep spektra | grep "${rpm}")
 if [ "$present" != "" ]; then
 	echo "REMOVING ${rpm} RPM in 10 seconds, cleanup spektra"
-	echo "Installing spektra-${rpmnew}..."
+	echo "Installing spektra-${desiredrpm}..."
 	sleep 10
 
 	sudo rpm -e diamanti-spektra-${rpm}.x86_64
 	sleep 5
 
-	sudo rpm -ivh ~/rpms/diamanti-spektra-${rpmnew}.x86_64.rpm
+	sudo rpm -ivh ~/rpms/diamanti-spektra-${desiredrpm}.x86_64.rpm
 	echo "RPM INSTALLATION DONE"
 	sleep 5
 
