@@ -1,6 +1,6 @@
-oldrpm="3.3.0-84"
-rpm="3.2.0-118"
-rpmnew="3.3.0-84"
+oldrpm="3.3.0-84"   # first this gets removed
+rpm="3.2.0-118"     # then this gets installed  # then this gets removed
+rpmnew="3.3.0-84"   # then this gets installed
 rpmnew="0.0.1-test5"
 
 present=$(rpm -qa | grep diaman | grep ${oldrpm})
