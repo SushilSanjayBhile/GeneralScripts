@@ -1,18 +1,34 @@
-oldrpm="3.3.0-84"
-rpm="3.2.0-118"
-rpmnew="3.3.0-84"
-rpmnew="0.0.1-test5"
+currentrpm="$(sudo rpm -qa | grep diamanti | grep spektra)"
 
-present=$(rpm -qa | grep diaman | grep ${oldrpm})
+firstrpm="3.2.0-118"
+
+rpmnew="3.3.0-84"
+rpmnew="0.0.1-test6"
+
+echo "This is current RPM: "${currentrpm}
+echo "this is first rpm going to get installed: "${firstrpm}
+echo "This is upgrad desired rpm: "${rpmnew}
+
+echo
+echo "Enter yes if you want to move ahead: "
+read input
+if [ "$input" == "yes" ]; then
+	echo "yes"
+else
+	echo "exiting"
+	exit
+fi
+
+present=$(rpm -qa | grep diaman | grep ${currentrpm})
 if [ "$present" != "" ]; then
-	echo "REMOVING ${oldrpm} RPM in 10 seconds, cleanup spektra"
-	echo "Installing spektra-${rpm}..."
+	echo "REMOVING ${currentrpm} RPM in 10 seconds, cleanup spektra"
+	echo "Installing spektra-${firstrpm}..."
 	sleep 10
 
-	sudo rpm -e diamanti-spektra-${oldrpm}.x86_64
+	sudo rpm -e diamanti-spektra-${currentrpm}.x86_64
 	sleep 3
 
-	sudo rpm -ivh ~/rpms/diamanti-spektra-${rpm}.x86_64.rpm
+	sudo rpm -ivh ~/rpms/diamanti-spektra-${firstrpm}.x86_64.rpm
 	
 	echo "RPM INSTALLATION DONE"
 	sleep 5
@@ -35,18 +51,18 @@ if [ "$present" != "" ]; then
 	echo "adoption DONE"
 	sleep 10
 fi
-exit
 sleep 3
-image=$(sudo docker images | grep spektrasvc  | grep test5 | awk '{print $3}')
+
+image=$(sudo docker images | grep spektrasvc | awk '{print $3}')
 sudo docker rmi $image
 
-present=$(rpm -qa | grep diaman | grep spektra | grep "${rpm}")
+present=$(rpm -qa | grep diaman | grep spektra | grep "${firstrpm}")
 if [ "$present" != "" ]; then
-	echo "REMOVING ${rpm} RPM in 10 seconds, cleanup spektra"
+	echo "REMOVING ${firstrpm} RPM in 10 seconds, cleanup spektra"
 	echo "Installing spektra-${rpmnew}..."
 	sleep 10
 
-	sudo rpm -e diamanti-spektra-${rpm}.x86_64
+	sudo rpm -e diamanti-spektra-${firstrpm}.x86_64
 	sleep 5
 
 	sudo rpm -ivh ~/rpms/diamanti-spektra-${rpmnew}.x86_64.rpm
