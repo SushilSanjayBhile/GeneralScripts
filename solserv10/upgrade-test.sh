@@ -3,7 +3,7 @@ currentrpm="$(sudo rpm -qa | grep diamanti | grep spektra)"
 firstrpm="3.2.0-118"
 
 rpmnew="3.3.0-84"
-rpmnew="0.0.1-test6"
+rpmnew="test6_vault_upgrade_way_change"
 
 echo "This is current RPM: "${currentrpm}
 echo "this is first rpm going to get installed: "${firstrpm}
@@ -25,7 +25,7 @@ if [ "$present" != "" ]; then
 	echo "Installing spektra-${firstrpm}..."
 	sleep 10
 
-	sudo rpm -e diamanti-spektra-${currentrpm}.x86_64
+	sudo rpm -e ${currentrpm}
 	sleep 3
 
 	sudo rpm -ivh ~/rpms/diamanti-spektra-${firstrpm}.x86_64.rpm
