@@ -5,7 +5,8 @@ else
 	export port=30011
 fi
 
-export DMCTL_SERVER=https://172.16.220.230:$port
+vip=$(dctl cluster status | grep -i virtual | awk '{print $4}')
+export DMCTL_SERVER=https://${vip}:$port
 export DMCTL_INSECURE_SKIP_VERIFY=true
 
 # ---- Create tenant pepsi
