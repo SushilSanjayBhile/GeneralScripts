@@ -1,0 +1,93 @@
+Screener.in Notebook Highlighter with Tampermonkey
+This script automatically opens the Notebook on a stock page at screener.in, checks if you’ve marked the stock with a "NO" in your notes, and turns the entire page red if found — helping avoid re-analysis of rejected stocks.
+
+🛠️ Step 1: Install Tampermonkey
+Go to https://tampermonkey.net
+
+Install the extension for your browser:
+
+Chrome / Brave / Edge → Click "Download"
+
+Firefox / Safari also supported
+
+📝 Step 2: Create a New Script
+Click the Tampermonkey extension icon
+
+Select “Create a new script”
+
+Remove all default content
+
+🧾 Step 3: Paste the Script
+Paste the following script inside the editor:
+
+javascript
+Copy
+Edit
+// ==UserScript==
+// @name         Screener Notebook Auto-check
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Auto open Screener notebook and turn page red if it contains "NO"
+// @match        https://www.screener.in/company/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // Wait for the page and notebook button to load
+    const waitForNotebookButton = setInterval(() => {
+        const notebookBtn = document.querySelector('button[onclick*="openInModal"]');
+        if (notebookBtn) {
+            clearInterval(waitForNotebookButton);
+            notebookBtn.click(); // Open the notebook modal
+            console.log("📘 Notebook modal triggered");
+
+            // Now wait for notebook content to load
+            const checkNotebookContent = setInterval(() => {
+                const notebookContent = document.querySelector('.notebook-content');
+
+                if (notebookContent) {
+                    clearInterval(checkNotebookContent);
+
+                    const text = notebookContent.innerText.trim().toUpperCase();
+                    console.log("📄 Notebook says:", text);
+
+                    if (text.includes("NO")) {
+                        document.body.style.backgroundColor = "red";
+                        console.log("🚫 Found NO — Background turned red");
+                    } else {
+                        console.log("✅ No 'NO' found — Page remains normal");
+                    }
+                }
+            }, 500);
+        }
+    }, 500);
+})();
+💾 Step 4: Save the Script
+Click File → Save or use the 💾 Save button
+
+Close the editor
+
+🚀 Step 5: Try It Out
+Visit any stock page on Screener, e.g.
+👉 https://www.screener.in/company/NAGAFERT/
+
+Make sure you have some Notebook content saved
+
+If the note contains "NO" (capital), the background turns red instantly! 🔴
+
+✅ Output Example
+Notebook Text	Page Turns Red?
+NO	✅ Yes
+Rejected	❌ No
+no	✅ Yes (case-insensitive)
+Buy Later	❌ No
+🧰 Optional Upgrades
+Highlight notes with "YES" or "BUY" in green 🟢
+
+Add icons or banners on the page
+
+Collapse notes after checking
+
+Let me know if you want help with any of those! Happy filtering, and no more wasting time on your "NO" stocks 😄📉📕
