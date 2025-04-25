@@ -1,0 +1,178 @@
+#####################################################################################
+#####################################################################################
+
+edit /etc/openldap/slapd.conf
+add following content:
+##################################
+
+# Load core schema definitions
+include     /etc/openldap/schema/core.schema
+include     /etc/openldap/schema/cosine.schema
+include     /etc/openldap/schema/inetorgperson.schema
+include     /etc/openldap/schema/nis.schema
+
+# Define PID and args files
+pidfile     /var/run/openldap/slapd.pid
+argsfile    /var/run/openldap/slapd.args
+
+# Load MDB backend
+modulepath  /usr/lib64/openldap
+moduleload  back_mdb.la
+
+# Database definition
+database    mdb
+maxsize     1073741824
+
+# Suffix and root user
+suffix      "dc=SushilDomain,dc=COM"
+rootdn      "cn=admin,dc=SushilDomain,dc=COM"
+rootpw      Sushil@111
+
+# Directory to store database
+directory   /var/lib/ldap
+
+# Index settings
+index       objectClass eq
+
+# Access controls (example)
+access to attrs=userPassword
+    by self write
+    by anonymous auth
+    by dn.base="cn=admin,dc=SushilDomain,dc=COM" write
+    by * none
+
+access to *
+    by self write
+    by dn.base="cn=admin,dc=SushilDomain,dc=COM" write
+    by users read
+    by anonymous read
+
+
+
+#####################################################################################
+#####################################################################################
+After placing this file:
+Make sure directories exist and are owned by ldap:
+
+sudo mkdir -p /var/lib/ldap
+sudo chown -R ldap:ldap /var/lib/ldap
+
+#####################################################################################
+#####################################################################################
+Generate slapd.d:
+
+sudo rm -rf /etc/openldap/slapd.d/*
+sudo slaptest -f /etc/openldap/slapd.conf -F /etc/openldap/slapd.d
+sudo chown -R ldap:ldap /etc/openldap/slapd.d
+
+#####################################################################################
+#####################################################################################
+Start slapd:
+
+sudo systemctl start slapd
+
+
+#####################################################################################
+#####################################################################################
+[diamanti@spt14 new-ldap-server]$ cat > group-user.ldif
+dn: ou=People,dc=SushilDomain,dc=COM
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Groups,dc=SushilDomain,dc=COM
+objectClass: organizationalUnit
+ou: Groups
+
+dn: cn=Sushil-LDAP-Group,ou=Groups,dc=SushilDomain,dc=COM
+objectClass: groupOfNames
+cn: Sushil-LDAP-Group
+member: uid=SushilGroupUser,ou=People,dc=SushilDomain,dc=COM
+
+dn: uid=SushilGroupUser,ou=People,dc=SushilDomain,dc=COM
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: SushilGroupUser
+sn: GroupUser
+cn: Sushil Group User
+displayName: Sushil Group User
+userPassword: Sushil@111
+uidNumber: 10001
+gidNumber: 10001
+homeDirectory: /home/SushilGroupUser
+loginShell: /bin/bash
+^C
+[diamanti@spt14 new-ldap-server]$
+#####################################################################################
+#####################################################################################
+Step 2: Apply the LDIF
+Save the above as group-user.ldif, then run:
+
+[diamanti@spt14 new-ldap-server]$ ldapadd -x -H ldap://172.16.52.8 -D "cn=admin,dc=SushilDomain,dc=COM" -w Sushil@111 -f group-user.ldif
+adding new entry "ou=People,dc=SushilDomain,dc=COM"
+ldap_add: No such object (32)
+
+[diamanti@spt14 new-ldap-server]$
+#####################################################################################
+#####################################################################################
+To Confirm It’s Working:
+Check group details:
+
+[diamanti@spt14 new-ldap-server]$ ldapsearch -x -H ldap://172.16.52.8 -b "ou=Groups,dc=SushilDomain,dc=COM"
+# extended LDIF
+#
+# LDAPv3
+# base <ou=Groups,dc=SushilDomain,dc=COM> with scope subtree
+# filter: (objectclass=*)
+# requesting: ALL
+#
+
+# search result
+search: 2
+result: 32 No such object
+
+# numResponses: 1
+[diamanti@spt14 new-ldap-server]$ 
+
+#####################################################################################
+#####################################################################################
+Verify the user:
+
+[diamanti@spt14 new-ldap-server]$ ldapsearch -x -H ldap://172.16.52.8 -b "ou=People,dc=SushilDomain,dc=COM"
+# extended LDIF
+#
+# LDAPv3
+# base <ou=People,dc=SushilDomain,dc=COM> with scope subtree
+# filter: (objectclass=*)
+# requesting: ALL
+#
+
+# search result
+search: 2
+result: 32 No such object
+
+# numResponses: 1
+[diamanti@spt14 new-ldap-server]$ 
+#####################################################################################
+#####################################################################################
+If the group doesn't exist, here's how to create it properly:
+Save this as group.ldif:
+
+dn: ou=Groups,dc=SushilDomain,dc=COM
+objectClass: organizationalUnit
+ou: Groups
+
+dn: cn=Sushil-LDAP-Group,ou=Groups,dc=SushilDomain,dc=COM
+objectClass: groupOfNames
+cn: Sushil-LDAP-Group
+member: uid=SushilGroupUser,ou=People,dc=SushilDomain,dc=COM
+
+#####################################################################################
+#####################################################################################
+Then add it:
+
+ldapadd -x -H ldap://172.16.52.8 \
+  -D "cn=admin,dc=SushilDomain,dc=COM" -w Sushil@111 \
+  -f group.ldif
+#####################################################################################
+#####################################################################################
