@@ -1,0 +1,84 @@
+// ==UserScript==
+// @name         Screener Notebook Auto-check
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  Auto open Screener notebook and turn page red if it contains "NO", green if "BUY"
+// @match        https://www.screener.in/company/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // pledged percentage checking code
+    const highlightPledged = setInterval(() => {
+        const spans = document.querySelectorAll('span.name');
+
+        for (let span of spans) {
+            if (span.innerText.trim() === 'Pledged percentage') {
+                const parentLi = span.closest('li');
+                const valueSpan = parentLi.querySelector('span.number');
+
+                if (valueSpan) {
+                    const valueText = valueSpan.innerText.trim().replace('%', '');
+                    const value = parseFloat(valueText);
+
+                    if (!isNaN(value) && value > 0) {
+                        parentLi.style.backgroundColor = '#8B0000'; // Dark red
+                        parentLi.style.color = 'white'; // Optional: make text readable
+                        console.log('🚨 High pledged percentage:', value + '%');
+                    } else {
+                        console.log('✅ No pledge or zero pledge:', value + '%');
+                    }
+
+                    clearInterval(highlightPledged);
+                }
+            }
+        }
+    }, 500);
+    // pledged percentage checking code ends here <====
+
+
+    // notebook comment checking code start ====>
+    const waitForNotebookButton = setInterval(() => {
+        const notebookBtn = document.querySelector('button[onclick*="openInModal"]');
+        if (notebookBtn) {
+            clearInterval(waitForNotebookButton);
+            notebookBtn.click(); // Open the notebook modal
+            console.log("📘 Notebook modal triggered");
+
+            const checkNotebookContent = setInterval(() => {
+                const notebookContent = document.querySelector('.notebook-content');
+
+                if (notebookContent) {
+                    clearInterval(checkNotebookContent);
+
+                    const text = notebookContent.innerText.trim().toUpperCase();
+                    console.log("📄 Notebook says:", text);
+
+                    if (text.includes("NO")) {
+                        document.body.style.backgroundColor = "red";
+                        console.log("🚫 Found NO — Background turned red");
+                    } else if (text.includes("BUY")) {
+                        document.body.style.backgroundColor = "green";
+                        console.log("✅ Found BUY — Background turned green");
+                    } else {
+                        console.log("⚪ No NO or BUY found — Page remains normal");
+                    }
+                }
+                // Try to close the modal
+                const closeBtn = document.querySelector('dialog.modal button[aria-label="Close"]') || document.querySelector('dialog.modal button');
+                if (closeBtn) {
+                    setTimeout(() => {
+                        closeBtn.click();
+                        console.log("❌ Notebook modal closed");
+                    }, 500);
+                } else {
+                    console.warn("❌ Close button not found");
+                }
+            }, 500);
+        }
+    }, 500);
+    // notebook comment checking code ends here <====
+
+})();
