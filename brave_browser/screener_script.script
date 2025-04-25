@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Screener Notebook Auto-check
+// @name         Screener Notebook Auto-check (Safe Version)
 // @namespace    http://tampermonkey.net/
-// @version      1.1
-// @description  Auto open Screener notebook and turn page red if it contains "NO", green if "BUY"
+// @version      1.3
+// @description  Auto open Screener notebook, check notes, color page, but keep notebook usable
 // @match        https://www.screener.in/company/*
 // @grant        none
 // ==/UserScript==
@@ -10,48 +10,39 @@
 (function () {
     'use strict';
 
-    // pledged percentage checking code
+    // 1. Highlight pledged percentage if > 0
     const highlightPledged = setInterval(() => {
         const spans = document.querySelectorAll('span.name');
-
         for (let span of spans) {
             if (span.innerText.trim() === 'Pledged percentage') {
                 const parentLi = span.closest('li');
                 const valueSpan = parentLi.querySelector('span.number');
-
                 if (valueSpan) {
-                    const valueText = valueSpan.innerText.trim().replace('%', '');
-                    const value = parseFloat(valueText);
-
+                    const value = parseFloat(valueSpan.innerText.trim().replace('%', ''));
                     if (!isNaN(value) && value > 0) {
-                        parentLi.style.backgroundColor = '#8B0000'; // Dark red
-                        parentLi.style.color = 'white'; // Optional: make text readable
+                        parentLi.style.backgroundColor = '#8B0000';
+                        parentLi.style.color = 'white';
                         console.log('🚨 High pledged percentage:', value + '%');
-                    } else {
-                        console.log('✅ No pledge or zero pledge:', value + '%');
                     }
-
                     clearInterval(highlightPledged);
+                    break;
                 }
             }
         }
     }, 500);
-    // pledged percentage checking code ends here <====
 
-
-    // notebook comment checking code start ====>
-    const waitForNotebookButton = setInterval(() => {
+    // 2. Auto open notebook and check notes
+    const notebookBtnInterval = setInterval(() => {
         const notebookBtn = document.querySelector('button[onclick*="openInModal"]');
         if (notebookBtn) {
-            clearInterval(waitForNotebookButton);
-            notebookBtn.click(); // Open the notebook modal
+            clearInterval(notebookBtnInterval);
+            notebookBtn.click();
             console.log("📘 Notebook modal triggered");
 
-            const checkNotebookContent = setInterval(() => {
+            const notebookCheckInterval = setInterval(() => {
                 const notebookContent = document.querySelector('.notebook-content');
-
                 if (notebookContent) {
-                    clearInterval(checkNotebookContent);
+                    clearInterval(notebookCheckInterval);
 
                     const text = notebookContent.innerText.trim().toUpperCase();
                     console.log("📄 Notebook says:", text);
@@ -65,20 +56,11 @@
                     } else {
                         console.log("⚪ No NO or BUY found — Page remains normal");
                     }
-                }
-                // Try to close the modal
-                const closeBtn = document.querySelector('dialog.modal button[aria-label="Close"]') || document.querySelector('dialog.modal button');
-                if (closeBtn) {
-                    setTimeout(() => {
-                        closeBtn.click();
-                        console.log("❌ Notebook modal closed");
-                    }, 500);
-                } else {
-                    console.warn("❌ Close button not found");
+
+                    // 🔒 No auto-close to avoid React issues
                 }
             }, 500);
         }
     }, 500);
-    // notebook comment checking code ends here <====
 
 })();
