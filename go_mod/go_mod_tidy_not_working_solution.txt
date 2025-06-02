@@ -1,0 +1,5 @@
+make unshare
+mkdir -p /tmp/gopath
+export GOPATH=/tmp/gopath
+export GOCACHE=/tmp/gocache
+go mod tidy
