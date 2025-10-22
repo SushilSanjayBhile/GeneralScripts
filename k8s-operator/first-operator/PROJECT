@@ -10,4 +10,14 @@ plugins:
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: first-operator
 repo: example.com
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: example.com
+  group: spektra
+  kind: DeploymentWatcher
+  path: example.com/api/v1beta1
+  version: v1beta1
 version: "3"
