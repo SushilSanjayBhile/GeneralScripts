@@ -1,0 +1,12 @@
+dn: dc=MyCompany,dc=COM
+objectClass: top
+objectClass: domain
+dc: MyCompany
+
+dn: ou=People,dc=MyCompany,dc=COM
+objectClass: organizationalUnit
+ou: People
+
+dn: cn=Manager,dc=MyCompany,dc=COM
+objectClass: organizationalRole
+cn: Manager

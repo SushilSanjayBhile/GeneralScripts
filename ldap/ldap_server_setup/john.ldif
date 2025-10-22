@@ -1,0 +1,8 @@
+dn: uid=john,ou=People,dc=MyCompany,dc=COM
+objectClass: top
+objectClass: inetOrgPerson
+uid: john
+cn: John Doe
+sn: Doe
+mail: john@MyCompany.COM
+userPassword: {SSHA}Ja/QtzocAZRerk4wJCLDFH1sQJM55gZ0
