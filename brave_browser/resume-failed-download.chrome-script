@@ -1,0 +1,56 @@
+// === CONFIG ===
+const RETRY_INTERVAL_MS = 5000;
+
+// === CORE FUNCTION ===
+function retryAllFailedOnce() {
+  const manager = document.querySelector('downloads-manager');
+  if (!manager || !manager.shadowRoot) {
+    console.log('❌ downloads-manager not ready');
+    return;
+  }
+
+  const items = manager.shadowRoot.querySelectorAll('downloads-item');
+
+  // FAILED (5) + INTERRUPTED / PAUSED-like (3)
+  const failedItems = [...items].filter(
+    i => i.data?.state === 5 || i.data?.state === 3
+  );
+
+  if (failedItems.length === 0) {
+    console.log('✅ No failed/interrupted downloads found');
+    return;
+  }
+
+  console.log(`🔁 Found ${failedItems.length} failed/interrupted downloads`);
+
+  failedItems.forEach((item, index) => {
+    setTimeout(() => {
+      console.log('▶️ Retrying:', item.data.fileName, 'state:', item.data.state);
+
+      const moreBtn = item.shadowRoot.querySelector(
+        'cr-icon-button#more-actions'
+      );
+
+      if (!moreBtn) return;
+
+      moreBtn.click();
+
+      setTimeout(() => {
+        const menu = item.shadowRoot.querySelector('cr-action-menu');
+        if (!menu) return;
+
+        const resumeBtn = menu.querySelector('#pause-or-resume');
+
+        if (resumeBtn && !resumeBtn.hasAttribute('disabled')) {
+          resumeBtn.click();
+          console.log('▶️ Resume clicked:', item.data.fileName);
+        }
+      }, 200);
+    }, index * 600);
+  });
+}
+
+// === LOOP EVERY 5 SECONDS ===
+console.log('🚀 Auto-retry loop started (every 5 seconds)');
+setInterval(retryAllFailedOnce, RETRY_INTERVAL_MS);
+
